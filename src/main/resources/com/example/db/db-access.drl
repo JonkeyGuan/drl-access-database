@@ -1,0 +1,39 @@
+package com.example.db;
+
+dialect "mvel"
+
+import com.example.db.Person
+import com.example.db.DBHelper
+import java.util.List
+
+
+declare DatabaseSimulator end
+
+declare FactsInitializer end
+
+rule "Simulate Database"
+salience 10
+when
+  not DatabaseSimulator()
+then
+  DBHelper.initialize();
+  insert(new DatabaseSimulator());
+end
+
+rule "Load Facts from Database"
+salience 9
+when
+  not FactsInitializer()
+then
+  for (Person person : DBHelper.loadFacts()){
+    insert(person);
+  }
+  insert(new FactsInitializer());
+end
+
+rule "Match Fact by name"
+when
+  person: Person(id in ("002", "005"))
+then
+  System.out.println("Matched " + person);
+end
